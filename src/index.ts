@@ -3,30 +3,34 @@ import mongoose from "mongoose";
 import path from "path";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
-import cors from "cors";
-
+import { UserModel } from "./db/User";
+import userRoutes from "./routes";
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const MONGO_URL = "mongodb://localhost:27017";
-mongoose.connect(MONGO_URL , {
-    dbName: "wayz"
-}).then(() => {
+mongoose
+  .connect(MONGO_URL, {
+    dbName: "wayz",
+  })
+  .then(() => {
     console.log("Connected to MongoDB");
-}).catch((err) => {
+  })
+  .catch((err) => {
     console.log("Error connecting to MongoDB", err);
-});
+  });
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-
+//routes
+app.use("/", userRoutes); 
 
 const server = createServer(app);
 
-const io = new Server(server)
+const io = new Server(server);
 io.on("connection", (socket: Socket) => {
   console.log(`User connected: ${socket.id}`);
 

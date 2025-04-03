@@ -7,6 +7,20 @@
   </head>
   <body>
     <h2>Chat App</h2>
+    <div id="loginForm">
+      <input id="username" type="text" placeholder="Enter username" required />
+      <input
+        id="password"
+        type="password"
+        placeholder="Enter password"
+        required
+      />
+      <button onclick="login()">Login</button>
+      <p id="loginError" style="color: red; display: none">
+        Invalid credentials
+      </p>
+    </div>
+
     <input id="messageInput" type="text" placeholder="Type a message" />
     <button onclick="sendMessage()">Send</button>
     <ul id="messages"></ul>
@@ -14,18 +28,44 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
+      function login() {
+        const email = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        })
+          .then((res) => res.json()) 
+          .then((data) => {
+            console.log("Server Response:", data); 
+
+            if (data.message === "Login successful") {
+              userId = data.user._id;
+              userEmail = data.user.email;
+            userName = data.user.name;
+              socket.emit("register", userId); // Register user with socket
+            } else {
+              document.getElementById("loginError").style.display = "block";
+              console.log("Login failed:", data);
+            }
+          })
+          .catch((err) => console.error("Login error:", err));
+      }
+
+      // const userId = prompt("Enter your user ID:");
       const messageInput = document.getElementById("messageInput");
       const messages = document.getElementById("messages");
 
       function sendMessage() {
         const message = messageInput.value;
-        socket.emit("message", message);
+        socket.emit("message", { userEmail , userName , userId, text: message });
         messageInput.value = "";
       }
 
       socket.on("message", (msg) => {
         const li = document.createElement("li");
-        li.textContent = msg;
+        li.textContent = `${msg.userEmail}: ${msg.text}`;
         messages.appendChild(li);
       });
     </script>

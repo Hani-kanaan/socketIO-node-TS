@@ -70,5 +70,35 @@ class UserController {
       return response.sendStatus(400);
     }
   };
+  loginUser = async (request: any, response: any) => {
+    try {
+      const { email, password } = request.body;
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return response
+          .status(401) 
+          .json({ message: "Invalid credentials" });
+      }
+ if (user.password !== password) {
+        return response
+          .status(401)
+          .json({ message: "Invalid credentials" });
+      }
+      return response.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+           
+        },
+         
+      });
+    } catch (error) {
+      console.error("Error during login:", error);
+      return response.sendStatus(500);  
+    }
+  };
 }
 export default UserController;
